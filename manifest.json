@@ -1,11 +1,11 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.0",
-	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"id": "jotoba-dictionary-plugin",
+	"name": "Jotoba Dictionary Plugin",
+	"version": "0.0.1",
+	"minAppVersion": "1.5.12",
+	"description": "Adds new note based on the Jotoba dictionary for the highlighted word.",
+	"author": "goldenyellowcrystal",
+	"authorUrl": "https://github.com/goldenyellowcrystal",
+	"fundingUrl": "",
 	"isDesktopOnly": false
 }
