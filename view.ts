@@ -1,4 +1,5 @@
 import { Editor, ItemView, WorkspaceLeaf, ViewStateResult, FileSystemAdapter } from "obsidian";
+import { JotobaApi } from "jotoba-api";
 
 export const DICTIONARY_VIEW_TYPE = "dictionary-view";
 
@@ -54,5 +55,12 @@ export class DictionaryView extends ItemView {
         editor.replaceSelection("potato");
       }
 		});
+
+    const getButton = container.createEl('button', { text: "Test GET" });
+    getButton.addEventListener('click', () => {
+      JotobaApi.getWordDefinition(this.searchText);
+    });
   }
+
+
 }
