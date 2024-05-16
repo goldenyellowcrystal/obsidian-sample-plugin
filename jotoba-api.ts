@@ -9,5 +9,7 @@ export class JotobaApi {
     let definition = await ApiUtils.post("https://jotoba.de/api/search/words", requestBody)
       .then(resp => resp.json());
     console.log("Definition:", definition);
+
+    return definition;
   }
 }

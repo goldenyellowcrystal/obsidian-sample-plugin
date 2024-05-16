@@ -66,7 +66,8 @@ export default class DictionaryPlugin extends Plugin {
 
 		// Get the highlighted text and search for it in the dictionary API
 		await leaf?.view.setState({searchText: this.highlightedText}, {history: false});
-		await (leaf?.view as DictionaryView).appendSearchText();
+		// await (leaf?.view as DictionaryView).appendSearchText();
+		await (leaf?.view as DictionaryView).searchHighlightedText();
 
     // "Reveal" the leaf in case it is in a collapsed sidebar
     workspace.revealLeaf(leaf);
