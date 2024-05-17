@@ -3,6 +3,20 @@ import { JotobaApi } from "jotoba-api";
 
 export const DICTIONARY_VIEW_TYPE = "dictionary-view";
 
+interface DefinitionItem {
+  wordType: Array<string>,
+  meaning: string,
+  misc: string
+}
+
+interface DictionaryItem {
+  title: string,
+  kanji: string,
+  kana: string,
+  audioLink: string,
+  definition: Array<DefinitionItem>
+}
+
 export class DictionaryView extends ItemView {
   searchText: string;
 
@@ -121,8 +135,25 @@ export class DictionaryView extends ItemView {
 
   transformCamelCase(text: string) {
     const result = text.replace(/([a-z])([A-Z])/g, `$1 $2`);
-    console.log("Result:", result)
     return result.charAt(0) + result.slice(1).toLowerCase();
+  }
+
+  transformwordDictionaryItemIntoMarkdown(wordDictionaryItem: DictionaryItem) {
+    var mdOutput = '';
+    mdOutput += ("## Definitions\n\n");
+    for (var idx in wordDictionaryItem.definition) {
+      const definitionItem = wordDictionaryItem.definition[idx];
+      mdOutput += ((Number(idx)+1) + '. **' + definitionItem.meaning + "**\n\n");
+      mdOutput += ("\t- <sub><sup>" + definitionItem.wordType.join(', ') + "</sub></sup>\n\n");
+    }
+
+    mdOutput += ("## Kanji\n");
+    mdOutput += ("(to be followed)\n\n");
+
+    mdOutput += ("## Reading\n");
+    mdOutput += ("- https://jotoba.de" + wordDictionaryItem.audioLink);
+
+    return mdOutput;
   }
 
   async searchHighlightedText() {
@@ -136,31 +167,55 @@ export class DictionaryView extends ItemView {
     container.createEl("h3", { text: "Dictionary View" });
     container.createEl("h4", { text: "Results for " + this.searchText + ":" });
 
+    // List out the definitions on-screen
     definition.words.forEach((word: any) => {
       const wordDiv = container.createEl('div');
+      var wordDictionaryItem = {} as DictionaryItem;
+
       if (word.reading.kanji) {
-        wordDiv.createEl("h5", { text: word.reading.kanji + " (" + word.reading.kana + ")" });
+        wordDictionaryItem.title = word.reading.kanji + " (" + word.reading.kana + ")";
+        wordDictionaryItem.kanji = word.reading.kanji;
       } else {
-        wordDiv.createEl("h5", { text: word.reading.kana });
+        wordDictionaryItem.title = word.reading.kana;
       }
+      wordDictionaryItem.kana = word.reading.kana;
+      wordDictionaryItem.audioLink = word.audio;
+      wordDiv.createEl("h5", { text: wordDictionaryItem.title });
 
       const meaningsList = wordDiv.createEl('ol');
+      wordDictionaryItem.definition = [];
       word.senses.forEach((sense: any) => {
-        console.log("Sense:", sense);
-        var parsedPos = this.parseSensePos(sense.pos);
-        meaningsList.createEl('small', { text: parsedPos.join(', ') });
+        var definitionObj = {} as DefinitionItem;
+        definitionObj.wordType = this.parseSensePos(sense.pos);
+        meaningsList.createEl('small', { text: definitionObj.wordType.join(', ') });
+
         const meaningsListItem = meaningsList.createEl('li');
-        meaningsListItem.createEl('strong', { text: sense.glosses.join('; ') });
+        definitionObj.meaning = sense.glosses.join('; ')
+        meaningsListItem.createEl('strong', { text: definitionObj.meaning });
         if (sense.field) {
           meaningsListItem.createEl('small', { text: " (" + this.transformCamelCase(sense.field) + ")" });
+          definitionObj.misc = this.transformCamelCase(sense.field);
         }
         if (sense.misc) {
           meaningsListItem.createEl('small', { text: " (" + this.transformCamelCase(sense.misc) + ")" });
+          definitionObj.misc = this.transformCamelCase(sense.misc);
         }
         meaningsList.createEl('br');
+        wordDictionaryItem.definition.push(definitionObj);
       })
 
-      console.log("---");
+      // Add Note button functionality
+      const addNoteButton = wordDiv.createEl('button', { text: "Create note" });
+      addNoteButton.addEventListener('click', () => {
+        try {
+          // Create note with the info retrieved from dictionary
+          const vault = this.app.vault;
+          const mdOutput = this.transformwordDictionaryItemIntoMarkdown(wordDictionaryItem);
+          vault.create(wordDictionaryItem.title + ".md", mdOutput);
+        } catch (err) {
+          console.log("Error:", err)
+        }
+      });
     })
   }
 
