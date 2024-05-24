@@ -1,7 +1,7 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, WorkspaceLeaf, ViewStateResult } from 'obsidian';
 import { DictionaryView, DICTIONARY_VIEW_TYPE } from "./view";
 
-interface DictionaryPluginSettings {
+export interface DictionaryPluginSettings {
 	mySetting: string,
 	mode: string;
 }
@@ -75,7 +75,7 @@ export default class DictionaryPlugin extends Plugin {
     }
 
 		// Get the highlighted text and search for it in the dictionary API
-		await leaf?.view.setState({searchText: this.highlightedText, mode: this.settings}, {history: false});
+		await leaf?.view.setState({searchText: this.highlightedText, settings: this.settings}, {history: false});
 		// await (leaf?.view as DictionaryView).appendSearchText();
 		await (leaf?.view as DictionaryView).searchHighlightedText();
 

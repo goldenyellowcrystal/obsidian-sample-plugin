@@ -1,6 +1,6 @@
 import { Editor, ItemView, WorkspaceLeaf, ViewStateResult, FileSystemAdapter } from "obsidian";
 import { JotobaApi } from "jotoba-api";
-import { DICTIONARY_MODE } from "main";
+import { DICTIONARY_MODE, DictionaryPluginSettings } from "main";
 
 export const DICTIONARY_VIEW_TYPE = "dictionary-view";
 
@@ -20,7 +20,7 @@ interface DictionaryItem {
 
 export class DictionaryView extends ItemView {
   searchText: string;
-  mode: string;
+  settings: DictionaryPluginSettings;
 
   constructor(leaf: WorkspaceLeaf) {
     super(leaf)
@@ -50,8 +50,8 @@ export class DictionaryView extends ItemView {
     if (state.searchText) {
       this.searchText = state.searchText;
     }
-    if (state.mode) {
-      this.mode = state.mode;
+    if (state.settings) {
+      this.settings = state.settings;
     }
 
     return super.setState(state, result);
@@ -224,10 +224,7 @@ export class DictionaryView extends ItemView {
           const view = this.app.workspace.getMostRecentLeaf()?.view;
           if (view) {
             const editor = (view.editor as Editor);
-            this.searchText;
-            const linkText = "[[" + wordDictionaryItem.title + "|{" + wordDictionaryItem.kanji
-              + "\\|" + wordDictionaryItem.kana + "}]]";
-            editor.replaceSelection(linkText);
+            editor.replaceSelection(this.formatLinkText(wordDictionaryItem));
           }
         } catch (err) {
           console.log("Error:", err)
@@ -258,6 +255,36 @@ export class DictionaryView extends ItemView {
     getButton.addEventListener('click', () => {
       JotobaApi.getWordDefinition(this.searchText);
     });
+  }
+
+  formatLinkText(wordDictionaryItem: DictionaryItem) {
+    console.log("Settings:", this.settings);
+
+    var textItem = '';
+    switch (this.settings.mode) {
+      case DICTIONARY_MODE.DO_NOT_REPLACE:
+        console.log("Mode: 1");
+        textItem = this.searchText;
+        break;
+      case DICTIONARY_MODE.ADD_FURIGANA:
+        console.log("Mode: 2");
+        textItem = "{" + this.searchText + "\\|" + wordDictionaryItem.kana + "}";
+        break;
+      case DICTIONARY_MODE.REPLACE_KANJI_NO_FURIGANA:
+        console.log("Mode: 3");
+        textItem = wordDictionaryItem.kanji;
+        break;
+      case DICTIONARY_MODE.REPLACE_KANJI_WITH_FURIGANA:
+        console.log("Mode: 4");
+        textItem = "{" +  wordDictionaryItem.kanji + "\\|" + wordDictionaryItem.kana + "}";
+        break;
+      default:
+        console.log("Mode: 5");
+        textItem = this.searchText;
+        break;
+    }
+
+    return "[[" + wordDictionaryItem.title + "|" + textItem + "]]";
   }
 
 
