@@ -2,11 +2,21 @@ import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Set
 import { DictionaryView, DICTIONARY_VIEW_TYPE } from "./view";
 
 interface DictionaryPluginSettings {
-	mySetting: string;
+	mySetting: string,
+	mode: string;
 }
 
 const DEFAULT_SETTINGS: DictionaryPluginSettings = {
-	mySetting: 'default'
+	mySetting: 'default',
+	mode: '1'
+}
+
+// dictionary modes
+export const DICTIONARY_MODE: any = {
+	'DO_NOT_REPLACE': '1',
+	'ADD_FURIGANA': '2',
+	'REPLACE_KANJI_NO_FURIGANA': '3',
+	'REPLACE_KANJI_WITH_FURIGANA': '4'
 }
 
 export default class DictionaryPlugin extends Plugin {
@@ -27,7 +37,7 @@ export default class DictionaryPlugin extends Plugin {
 		});
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		this.addSettingTab(new DictionarySettingTab(this.app, this));
 
 		// Register the view for the dictionary
     this.registerView(
@@ -65,7 +75,7 @@ export default class DictionaryPlugin extends Plugin {
     }
 
 		// Get the highlighted text and search for it in the dictionary API
-		await leaf?.view.setState({searchText: this.highlightedText}, {history: false});
+		await leaf?.view.setState({searchText: this.highlightedText, mode: this.settings}, {history: false});
 		// await (leaf?.view as DictionaryView).appendSearchText();
 		await (leaf?.view as DictionaryView).searchHighlightedText();
 
@@ -74,10 +84,10 @@ export default class DictionaryPlugin extends Plugin {
   }
 }
 
-class SampleSettingTab extends PluginSettingTab {
-	plugin: HelloWorldPlugin;
+class DictionarySettingTab extends PluginSettingTab {
+	plugin: DictionaryPlugin;
 
-	constructor(app: App, plugin: HelloWorldPlugin) {
+	constructor(app: App, plugin: DictionaryPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -97,5 +107,20 @@ class SampleSettingTab extends PluginSettingTab {
 					this.plugin.settings.mySetting = value;
 					await this.plugin.saveSettings();
 				}));
+
+		new Setting(containerEl)
+			.setName('Replace highlighted text Mode')
+			.setDesc('Behaviour whether to replace the highlighted text when linking to the created note')
+			.addDropdown(dropdown => dropdown
+				.addOption(DICTIONARY_MODE.DO_NOT_REPLACE, 'Do not replace text')
+				.addOption(DICTIONARY_MODE.ADD_FURIGANA, 'Add furigana to current selection')
+				.addOption(DICTIONARY_MODE.REPLACE_KANJI_NO_FURIGANA, 'Replace text with kanji only')
+				.addOption(DICTIONARY_MODE.REPLACE_KANJI_WITH_FURIGANA, 'Replace text with kanji and furigana')
+				.setValue(this.plugin.settings.mode)
+				.onChange(async (value) => {
+					this.plugin.settings.mode = value;
+					await this.plugin.saveSettings();
+				})
+			)
 	}
 }

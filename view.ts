@@ -1,5 +1,6 @@
 import { Editor, ItemView, WorkspaceLeaf, ViewStateResult, FileSystemAdapter } from "obsidian";
 import { JotobaApi } from "jotoba-api";
+import { DICTIONARY_MODE } from "main";
 
 export const DICTIONARY_VIEW_TYPE = "dictionary-view";
 
@@ -19,6 +20,7 @@ interface DictionaryItem {
 
 export class DictionaryView extends ItemView {
   searchText: string;
+  mode: string;
 
   constructor(leaf: WorkspaceLeaf) {
     super(leaf)
@@ -47,6 +49,9 @@ export class DictionaryView extends ItemView {
     // The `state` coming in 
     if (state.searchText) {
       this.searchText = state.searchText;
+    }
+    if (state.mode) {
+      this.mode = state.mode;
     }
 
     return super.setState(state, result);
@@ -150,8 +155,10 @@ export class DictionaryView extends ItemView {
     mdOutput += ("## Kanji\n");
     mdOutput += ("(to be followed)\n\n");
 
-    mdOutput += ("## Reading\n");
-    mdOutput += ("- https://jotoba.de" + wordDictionaryItem.audioLink);
+    if (wordDictionaryItem.audioLink) {
+      mdOutput += ("## Reading\n");
+      mdOutput += ("- https://jotoba.de" + wordDictionaryItem.audioLink);
+    }
 
     return mdOutput;
   }
@@ -212,6 +219,16 @@ export class DictionaryView extends ItemView {
           const vault = this.app.vault;
           const mdOutput = this.transformwordDictionaryItemIntoMarkdown(wordDictionaryItem);
           vault.create(wordDictionaryItem.title + ".md", mdOutput);
+
+          // Replace highlighted text with link to new note + add furigana
+          const view = this.app.workspace.getMostRecentLeaf()?.view;
+          if (view) {
+            const editor = (view.editor as Editor);
+            this.searchText;
+            const linkText = "[[" + wordDictionaryItem.title + "|{" + wordDictionaryItem.kanji
+              + "\\|" + wordDictionaryItem.kana + "}]]";
+            editor.replaceSelection(linkText);
+          }
         } catch (err) {
           console.log("Error:", err)
         }
