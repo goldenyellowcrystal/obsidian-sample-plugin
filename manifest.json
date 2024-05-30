@@ -1,7 +1,7 @@
 {
 	"id": "jotoba-dictionary-plugin",
 	"name": "Jotoba Dictionary Plugin",
-	"version": "0.0.1",
+	"version": "1.0.0",
 	"minAppVersion": "1.5.12",
 	"description": "Adds new note based on the Jotoba dictionary for the highlighted word.",
 	"author": "goldenyellowcrystal",
