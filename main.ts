@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, WorkspaceLeaf, ViewStateResult } from 'obsidian';
+import { App, Editor, MarkdownView, Plugin, PluginSettingTab, Setting, WorkspaceLeaf } from 'obsidian';
 import { DictionaryView, DICTIONARY_VIEW_TYPE } from "./view";
 
 export interface DictionaryPluginSettings {
@@ -71,7 +71,9 @@ export default class DictionaryPlugin extends Plugin {
       // Our view could not be found in the workspace, create a new leaf
       // in the right sidebar for it
       leaf = workspace.getRightLeaf(false);
-      await leaf.setViewState({ type: DICTIONARY_VIEW_TYPE, active: true });
+			if (leaf != null) {
+				await leaf.setViewState({ type: DICTIONARY_VIEW_TYPE, active: true }); // @ts-ignore
+			}
     }
 
 		// Get the highlighted text and search for it in the dictionary API
@@ -80,7 +82,9 @@ export default class DictionaryPlugin extends Plugin {
 		await (leaf?.view as DictionaryView).searchHighlightedText();
 
     // "Reveal" the leaf in case it is in a collapsed sidebar
-    workspace.revealLeaf(leaf);
+		if (leaf != null) {
+			workspace.revealLeaf(leaf);  // @ts-ignore
+		}
   }
 }
 

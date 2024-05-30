@@ -1,4 +1,4 @@
-import { Editor, ItemView, Notice, WorkspaceLeaf, ViewStateResult } from "obsidian";
+import { Editor, ItemView, Notice, WorkspaceLeaf, ViewStateResult, editorLivePreviewField } from "obsidian";
 import { JotobaApi } from "jotoba-api";
 import { DICTIONARY_MODE, DictionaryPluginSettings } from "main";
 
@@ -224,9 +224,9 @@ export class DictionaryView extends ItemView {
             vault.create(filename, mdOutput);
   
             // Replace highlighted text with link to new note + add furigana
-            const view = this.app.workspace.getMostRecentLeaf()?.view;
+            const view : any = this.app.workspace.getMostRecentLeaf()?.view;
             if (view) {
-              const editor = (view.editor as Editor);
+              const editor = view.editor;
               editor.replaceSelection(this.formatLinkText(wordDictionaryItem));
             }
           } catch (err) {
@@ -239,7 +239,7 @@ export class DictionaryView extends ItemView {
         const linkToNoteButton = wordDiv.createEl('button', { text: 'Link to note' });
         linkToNoteButton.addEventListener('click', () => {
           // Replace highlighted text with link to new note + add furigana
-          const view = this.app.workspace.getMostRecentLeaf()?.view;
+          const view : any = this.app.workspace.getMostRecentLeaf()?.view;
           if (view) {
             const editor = (view.editor as Editor);
             editor.replaceSelection(this.formatLinkText(wordDictionaryItem));
