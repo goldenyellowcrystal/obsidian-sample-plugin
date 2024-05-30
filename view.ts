@@ -218,7 +218,7 @@ export class DictionaryView extends ItemView {
           // Create note with the info retrieved from dictionary
           const vault = this.app.vault;
           const mdOutput = this.transformwordDictionaryItemIntoMarkdown(wordDictionaryItem);
-          vault.create(wordDictionaryItem.title + ".md", mdOutput);
+          vault.create(this.formatFilePath(wordDictionaryItem.title), mdOutput);
 
           // Replace highlighted text with link to new note + add furigana
           const view = this.app.workspace.getMostRecentLeaf()?.view;
@@ -233,28 +233,17 @@ export class DictionaryView extends ItemView {
     })
   }
 
-  async appendSearchText() {
-    const container = this.containerEl.children[1];
-    container.createEl("h4", { text: this.searchText });
-    
-    const submitButton = container.createEl('button', { text: "Create note" });
-    submitButton.addEventListener('click', () => {
-      // Create note with the info retrieved from dictionary
-      const vault = this.app.vault;
-      vault.create("test.md", "");
+  formatFilePath(fileName: string) {
+    const formattedFolderPath = this.settings.folderPath.endsWith('/') ? this.settings.folderPath
+      : this.settings.folderPath + '/';
+    // Create if folder does not exist, otherwise nothing
+    try {
+      this.app.vault.createFolder(formattedFolderPath)
+    } catch (e) {
+      ; // NOOP
+    }
 
-      // Replace highlighted text with link to new note + add furigana
-      const view = this.app.workspace.getMostRecentLeaf()?.view;
-      if (view) {
-        const editor = (view.editor as Editor);
-        editor.replaceSelection("potato");
-      }
-		});
-
-    const getButton = container.createEl('button', { text: "Test GET" });
-    getButton.addEventListener('click', () => {
-      JotobaApi.getWordDefinition(this.searchText);
-    });
+    return formattedFolderPath + fileName + '.md';
   }
 
   formatLinkText(wordDictionaryItem: DictionaryItem) {

@@ -2,12 +2,12 @@ import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Set
 import { DictionaryView, DICTIONARY_VIEW_TYPE } from "./view";
 
 export interface DictionaryPluginSettings {
-	mySetting: string,
 	mode: string;
+	folderPath: string;
 }
 
 const DEFAULT_SETTINGS: DictionaryPluginSettings = {
-	mySetting: 'default',
+	folderPath: '/',
 	mode: '1'
 }
 
@@ -98,17 +98,6 @@ class DictionarySettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
-				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
-
-		new Setting(containerEl)
 			.setName('Replace highlighted text Mode')
 			.setDesc('Behaviour whether to replace the highlighted text when linking to the created note')
 			.addDropdown(dropdown => dropdown
@@ -121,6 +110,24 @@ class DictionarySettingTab extends PluginSettingTab {
 					this.plugin.settings.mode = value;
 					await this.plugin.saveSettings();
 				})
+			);
+
+		new Setting(containerEl)
+			.setName('Dictionary Folder Path')
+			.setDesc('The folder where the newly created dictionary notes will be saved in')
+			.addText(text => text
+				.setValue(this.plugin.settings.folderPath)
+				.onChange(async (value) => {
+					this.plugin.settings.folderPath = value;
+					await this.plugin.saveSettings();
+				})
 			)
+			.addButton(button => button
+				.setButtonText('Create folder')
+				.onClick(evt => {
+					// create folder
+					this.app.vault.createFolder(this.plugin.settings.folderPath);
+				})
+			);
 	}
 }
