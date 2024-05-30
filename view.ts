@@ -1,4 +1,4 @@
-import { Editor, ItemView, WorkspaceLeaf, ViewStateResult, FileSystemAdapter } from "obsidian";
+import { Editor, ItemView, Notice, WorkspaceLeaf, ViewStateResult } from "obsidian";
 import { JotobaApi } from "jotoba-api";
 import { DICTIONARY_MODE, DictionaryPluginSettings } from "main";
 
@@ -211,31 +211,49 @@ export class DictionaryView extends ItemView {
         wordDictionaryItem.definition.push(definitionObj);
       })
 
-      // Add Note button functionality
-      const addNoteButton = wordDiv.createEl('button', { text: "Create note" });
-      addNoteButton.addEventListener('click', () => {
-        try {
-          // Create note with the info retrieved from dictionary
-          const vault = this.app.vault;
-          const mdOutput = this.transformwordDictionaryItemIntoMarkdown(wordDictionaryItem);
-          vault.create(this.formatFilePath(wordDictionaryItem.title), mdOutput);
-
+      // Check existence of note
+      const vault = this.app.vault;
+      const filename = this.formatFilePath(wordDictionaryItem.title, true);
+      if (!vault.getFileByPath(filename)) {
+        // Add Note button functionality
+        const addNoteButton = wordDiv.createEl('button', { text: "Create note" });
+        addNoteButton.addEventListener('click', () => {
+          try {
+            // Create note with the info retrieved from dictionary
+            const mdOutput = this.transformwordDictionaryItemIntoMarkdown(wordDictionaryItem);
+            vault.create(filename, mdOutput);
+  
+            // Replace highlighted text with link to new note + add furigana
+            const view = this.app.workspace.getMostRecentLeaf()?.view;
+            if (view) {
+              const editor = (view.editor as Editor);
+              editor.replaceSelection(this.formatLinkText(wordDictionaryItem));
+            }
+          } catch (err) {
+            new Notice('An error has occurred during note creation.');
+            console.log("Error:", err)
+          }
+        });
+      } else {
+        // Link to note functionality
+        const linkToNoteButton = wordDiv.createEl('button', { text: 'Link to note' });
+        linkToNoteButton.addEventListener('click', () => {
           // Replace highlighted text with link to new note + add furigana
           const view = this.app.workspace.getMostRecentLeaf()?.view;
           if (view) {
             const editor = (view.editor as Editor);
             editor.replaceSelection(this.formatLinkText(wordDictionaryItem));
           }
-        } catch (err) {
-          console.log("Error:", err)
-        }
-      });
+        });
+      }
     })
   }
 
-  formatFilePath(fileName: string) {
-    const formattedFolderPath = this.settings.folderPath.endsWith('/') ? this.settings.folderPath
-      : this.settings.folderPath + '/';
+  formatFilePath(fileName: string, skipAddRootSlash: boolean = false) {
+    const folderPath = this.settings.folderPath;
+    const formattedFolderPath = (folderPath.endsWith('/') || (skipAddRootSlash && (folderPath == '' || folderPath == '/')))
+      ? this.settings.folderPath : this.settings.folderPath + '/';
+
     // Create if folder does not exist, otherwise nothing
     try {
       this.app.vault.createFolder(formattedFolderPath)
@@ -247,28 +265,21 @@ export class DictionaryView extends ItemView {
   }
 
   formatLinkText(wordDictionaryItem: DictionaryItem) {
-    console.log("Settings:", this.settings);
-
     var textItem = '';
     switch (this.settings.mode) {
       case DICTIONARY_MODE.DO_NOT_REPLACE:
-        console.log("Mode: 1");
         textItem = this.searchText;
         break;
       case DICTIONARY_MODE.ADD_FURIGANA:
-        console.log("Mode: 2");
         textItem = "{" + this.searchText + "\\|" + wordDictionaryItem.kana + "}";
         break;
       case DICTIONARY_MODE.REPLACE_KANJI_NO_FURIGANA:
-        console.log("Mode: 3");
         textItem = wordDictionaryItem.kanji;
         break;
       case DICTIONARY_MODE.REPLACE_KANJI_WITH_FURIGANA:
-        console.log("Mode: 4");
         textItem = "{" +  wordDictionaryItem.kanji + "\\|" + wordDictionaryItem.kana + "}";
         break;
       default:
-        console.log("Mode: 5");
         textItem = this.searchText;
         break;
     }
